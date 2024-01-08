@@ -107,4 +107,29 @@ def print_canvas_grid():
 
             elif (grid[i][j][1] == 1):
                 #affichage joueur
-                Canvas.create_oval(50*j, 50*i, 50*j+50, 50*i+50, fill="yellow")
+                Canevas.create_oval(50*j, 50*i, 50*j+50, 50*i+50, fill="yellow")
+
+            elif (grid[i][j][2] == 1):
+                #affichage caisse
+                Canevas.create_rectangle(50*j, 50*i, 50*j+50, 50*i+50, fill="red")
+
+            elif (grid[i][j][3] == 1):
+                #affichage interrupteur
+                Canevas.create_oval(50*j+10, 50*i+10, 50*j+40, 50*i+40, fill="red")
+
+def Clavier(event):
+    global level_number
+    global end
+    """ Gestion de l'évenement : Appui sur une touche du clavier"""
+    if end == False: #quand le jeu est terminé, on ne peut plus se déplacer
+        #on efface le canevas
+        Canevas.delete("all")
+        mvt_poss = True
+        key = event.keysym
+        for i in range(12):
+            for j in range(16):
+                if grid[i][j][1] == 1 and mvt_poss:
+                    #déplacement possible si pas de mur dans la case destination ni de caisse suivie d'une caisse ou d'un mur
+                    #haut
+                    if key == "Up" and grid[i-1][j][0] != 1 and not(grid[i-1][j][2]==1) and grid[i-2][j][2]==1 or grid[i-2][j][0]==1:
+                        if grid[i-1][j][2] == 1

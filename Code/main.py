@@ -1,7 +1,7 @@
 from tkinter import *
 
 
-class GameWindow(tk.Tk):
+class GameWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
 
@@ -200,5 +200,3 @@ if __name__ == "__main__":
 
     #boucle principale
     Window.mainloop()
-            
-                        

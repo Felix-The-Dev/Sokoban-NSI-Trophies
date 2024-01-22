@@ -6,10 +6,7 @@ class GameWindow(Tk):
         Tk.__init__(self)
 
         self.title("Jeu du Sokoban - Félix - Trophées de la NSI")
-
-        self.grid = [[]]
         self.create_grid()
-        self.create_level("system/base_levels/level1.txt")
 
     def create_grid(self):
         # Création du plateau 
@@ -21,25 +18,30 @@ class GameWindow(Tk):
                 for k in range(4):
                     grid[i][j].append(0)
 
-    def create_level(self, level_path):
-        level = []
 
-        with open(level_path, "r") as level_file:
-            i=0
-            for lign in level_file:
-                level.append([])
-                for element in lign.split(" "):
-                    level[i].append(element)
-                i += 1
-        for ligns in level:
-            print(ligns)
+        # niveau 1
+        # murs
 
-    def print_game_grid():
         for i in range(12):
-            print("[ ")
-            for j in range(16):
-                print(grid[i][j])
-            print(" ]\n")
+            grid[i][0][0] = 1
+            grid[i][1][0] = 1
+            grid[i][14][0] = 1
+            grid[i][15][0] = 1
+
+        for j in range(16):
+            grid[0][j][0] = 1
+            grid[1][j][0] = 1
+            grid[10][j][0] = 1
+            grid[11][j][0] = 1
+
+        # joueur
+        grid[3][3][1] = 1
+        #caisses
+        grid[5][4][2]=1
+        grid[5][6][2]=1
+        #interrupteurs
+        grid[3][8][3] = 1
+        grid[5][5][3] = 1
 
 
 
@@ -198,3 +200,5 @@ if __name__ == "__main__":
 
     #boucle principale
     Window.mainloop()
+            
+                        

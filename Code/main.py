@@ -38,7 +38,7 @@ class SokobanGame(Canvas):
     def load_level(self, level:np.array, level_num=None):
         if level_num==None:
             self.current_level = level
-            print_on_canvas(level)
+            self.print_on_canvas(level)
         else:
             path="system/base_levels/"
             match level_num:
@@ -64,9 +64,9 @@ class SokobanGame(Canvas):
                     file_name = 'level10.txt'
             level = self.create_level(path+file_name)
             self.current_level = level
-            print_on_canvas(level)
-        
-    def print_on_canvas(self, level):
+            self.update()
+    
+    def update(self, level):
 
         # On crée les lignes de chaque ligne et de chaque colonne
         for i in range(level.shape[0]):

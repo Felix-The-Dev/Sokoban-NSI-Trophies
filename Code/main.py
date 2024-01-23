@@ -1,4 +1,5 @@
 from tkinter import *
+import numpy as np
 
 
 class GameWindow(Tk):
@@ -7,47 +8,108 @@ class GameWindow(Tk):
 
         self.title("Jeu du Sokoban - Félix - Trophées de la NSI")
 
-        self.grid = [[]]
-        self.create_grid()
-        self.create_level("system/base_levels/level1.txt")
 
-    def create_grid(self):
-        # Création du plateau 
-        # plateau vide au départ
-        for i in range(12):
-            grid.append([])
-            for j in range(16):
-                grid[i].append([])
-                for k in range(4):
-                    grid[i][j].append(0)
+class SokobanGame(Canvas):
+
+    def __init__(self, Window, width = 600, height=400, bg="grey"):
+        Canvas.__init__(self,Window, width = width, height=height, bg=bg)
+
+        self.current_level = np.array([[]])
+
+        self.level1 = self.create_level("level2.txt")
+        self.load_level(self.level1)
 
     def create_level(self, level_path):
-        level = []
 
+        level_in_list = []
         with open(level_path, "r") as level_file:
             i=0
             for lign in level_file:
-                level.append([])
+                lign = lign.replace("\n", "") # on supprimer les \n à la fin
+
+                level_in_list.append([])
                 for element in lign.split(" "):
-                    level[i].append(element)
+                    level_in_list[i].append(element)
                 i += 1
-        for ligns in level:
-            print(ligns)
+        
+        level = np.array(level_in_list)
+        return level 
 
-    def print_game_grid():
-        for i in range(12):
-            print("[ ")
-            for j in range(16):
-                print(grid[i][j])
-            print(" ]\n")
+    def load_level(self, level:np.array, level_num=None):
+        if level_num==None:
+            self.current_level = level
+            print_on_canvas(level)
+        else:
+            path="system/base_levels/"
+            match level_num:
+                case 1:
+                    file_name = 'level1.txt'
+                case 2:
+                    file_name = 'level2.txt'
+                case 3:
+                    file_name = 'level3.txt'
+                case 4:
+                    file_name = 'level4.txt'
+                case 5:
+                    file_name = 'level5.txt'
+                case 6:
+                    file_name = 'level6.txt'
+                case 7:
+                    file_name = 'level7.txt'
+                case 8:
+                    file_name = 'level8.txt'
+                case 9:
+                    file_name = 'level9.txt'
+                case 10:
+                    file_name = 'level10.txt'
+            level = self.create_level(path+file_name)
+            self.current_level = level
+            print_on_canvas(level)
+        
+    def print_on_canvas(self, level):
+
+        # On crée les lignes de chaque ligne et de chaque colonne
+        for i in range(level.shape[0]):
+            self.create_line(0,50*i, 800, 50*i, width=0.5)
+
+        for j in range(level.shape[1]):
+            self.create_line(0, 50*j, 0.5*j, 600, width=0.5)
 
 
+        for i in range(level.shape[0]):
+            for j in range(level.shape[1]):
+                if (level[i][j] == "1"):
+                    #affichage mur
+                    self.create_rectangle(50*j, 50*i, 50*j+50, 50*i+50, fill="blue")
+
+                elif (level[i][j] == "p"):
+                    #affichage joueur
+                    self.create_oval(50*j, 50*i, 50*j+50, 50*i+50, fill="yellow")
+
+                elif (level[i][j] == "X"):
+                    #affichage caisse
+                    self.create_rectangle(50*j, 50*i, 50*j+50, 50*i+50, fill="red")
+
+                elif (level[i][j] == "I"):
+                    #affichage interrupteur
+                    self.create_oval(50*j+10, 50*i+10, 50*j+40, 50*i+40, fill="red")
+
+
+
+
+    # Fonction testant si un niveau est fini
+    def test_victory(self):
+        for i in range(self.current_level.shape[0]):
+            for j in range(self.current_level.shape[1]):
+                if self.current_level[i][j][3] == 1 and self.current_level[i][j][2] == 0:
+                    return False
+                    #si il y au moins un interrupteur sans caisse, on n'a pas fini
+        return True
 
 
 
 if __name__ == "__main__":
     
-    grid=[] 
     # Création de la fenetre principale
     Window = GameWindow()
 
@@ -56,145 +118,85 @@ if __name__ == "__main__":
     end = False
 
 
-
-
-    def clear_grid():
-        #on efface le plateau
-        for i in range(2,10):
-            for j in range(2,14):
-                grid[i][j][0] = 0
-                grid[i][j][1] = 0
-                grid[i][j][2] = 0
-                grid[i][j][3] = 0
-
-    # Fonctions, appelées au bon moment pour les niveauc suivants
-    def genere_level2():
-        clear_grid()
-
-        #on crée un nouveau plateau
-        #murs
-        grid[8][8][0] = 1
-        grid[7][3][0] = 1
-        #joueur
-        grid[9][9][1] = 1
-        #caisses
-        grid[5][4][2] = 1
-        grid[5][6][2] = 1
-        #interrupteurs
-        grid[3][8][3] = 1
-        grid[5][5][3] = 1
-
-    def genere_level3():
-        clear_grid()
-
-    # Fonction testant si un niveau est fini
-    def test_victoire():
-        for i in range(12):
-            for j in range(16):
-                if grid[i][j][3] == 1 and grid[i][j][2] == 0:
-                    return False
-                    #si il y au moins un interrupteur sans caisse, on n'a pas fini
-        return True
+    
 
     # Création d'un widget Canvas (zone graphique)
-    width = 600
-    height = 800
-    Canevas = Canvas(Window, width = width, height=height, bg="grey")
+    width = 1400
+    height = 900
+    Interface_canvas = Canvas(Window, width = width, height=height, bg="grey")
+    Play_canvas = SokobanGame(Window, width = width*1.5, height=height*1.5, bg="white")
 
     # Titre
-    Canevas.create_text(400, 100, fill="darkblue", font="Times 60 italic bold", text="SOKOBAN")
-    Canevas.create_text(400, 250, fill="darkblue", font="Times 20 italic bold", text="Poussez les caisses sur les interrupteurs")
-    Canevas.create_text(400, 300, fill="darkblue", font="Times 20 italic bold", text="Appuyez sur une touche pour commencer")
+    Interface_canvas.create_text(width/2, 100, fill="darkblue", font="Times 60 italic bold", text="Jeu du SOKOBAN")
+    Interface_canvas.create_text(width/2, 250, fill="darkblue", font="Times 20 italic bold", text="Poussez les caisses sur les interrupteurs")
+    Interface_canvas.create_text(width/2, 300, fill="darkblue", font="Times 20 italic bold", text="Appuyez sur une touche pour commencer")
 
-    def print_canvas_grid():
-        for i in range(12):
-            Canevas.create_line(0,50*i,800,50*i,width=0.5)
-        for j in range(16):
-            Canevas.create_line(50*j, 0.5*j,600,width=0.5)
-        for i in range(12):
-            print()
-            for j in range(16):
-                if (grid[i][j][0] == 1):
-                    #affichage mur
-                    Canevas.create_rectangle(50*j, 50*i, 50*j+50, 50*i+50, fill="blue")
-
-                elif (grid[i][j][1] == 1):
-                    #affichage joueur
-                    Canevas.create_oval(50*j, 50*i, 50*j+50, 50*i+50, fill="yellow")
-
-                elif (grid[i][j][2] == 1):
-                    #affichage caisse
-                    Canevas.create_rectangle(50*j, 50*i, 50*j+50, 50*i+50, fill="red")
-
-                elif (grid[i][j][3] == 1):
-                    #affichage interrupteur
-                    Canevas.create_oval(50*j+10, 50*i+10, 50*j+40, 50*i+40, fill="red")
-
+   
     def Keyboard(event):
         global level_number
         global end
         """ Gestion de l'évenement : Appui sur une touche du clavier"""
         if end == False: #quand le jeu est terminé, on ne peut plus se déplacer
             #on efface le canevas
-            Canevas.delete("all")
+            Play_canvas.delete("all")
             mvt_poss = True
             key = event.keysym
             for i in range(12):
                 for j in range(16):
-                    if grid[i][j][1] == 1 and mvt_poss:
+                    if Play_canvas.current_level[i][j][1] == 1 and mvt_poss:
                         #déplacement possible si pas de mur dans la case destination ni de caisse suivie d'une caisse ou d'un mur
                         #haut
-                        if key == "Up" and grid[i-1][j][0] != 1 and not(grid[i-1][j][2]==1) and (grid[i-2][j][2]==1 or grid[i-2][j][0]==1):
-                            if grid[i-1][j][2] == 1:
-                                grid[i-2][j][2] = 1
-                                grid[i-1][j][2] = 0
-                            grid[i][j][1] = 0
-                            grid[i-1][j][1] = 1
+                        if key == "Up" and Play_canvas.current_level[i-1][j][0] != 1 and not(Play_canvas.current_level[i-1][j][2]==1) and (Play_canvas.current_level[i-2][j][2]==1 or Play_canvas.current_level[i-2][j][0]==1):
+                            if Play_canvas.current_level[i-1][j][2] == 1:
+                                Play_canvas.current_level[i-2][j][2] = 1
+                                Play_canvas.current_level[i-1][j][2] = 0
+                            Play_canvas.current_level[i][j][1] = 0
+                            Play_canvas.current_level[i-1][j][1] = 1
                 
-                        elif key == "Left" and grid[i][j-1][0] != 1 and not(grid[i][j-1][2]==1) and (grid[i][j-2][2]==1 or grid[i][j-2][0]==1):
-                            if grid[i][j-1][2]==1:
-                                grid[i][j-2][2] = 1
-                                grid[i][j-1][2] = 0
-                            grid[i][j][1] = 0
-                            grid[i][j-1][1] = 1
+                        elif key == "Left" and Play_canvas.current_level[i][j-1][0] != 1 and not(Play_canvas.current_level[i][j-1][2]==1) and (Play_canvas.current_level[i][j-2][2]==1 or Play_canvas.current_level[i][j-2][0]==1):
+                            if Play_canvas.current_level[i][j-1][2]==1:
+                                Play_canvas.current_level[i][j-2][2] = 1
+                                Play_canvas.current_level[i][j-1][2] = 0
+                            Play_canvas.current_level[i][j][1] = 0
+                            Play_canvas.current_level[i][j-1][1] = 1
 
-                        elif key == "Right" and grid[i][j+1][0] != 1 and not(grid[i][j+1][2]==1) and (grid[i][j+2][2]==1 or grid[i][j+2][0]==1):
-                            if grid[i][j+1][2]==1:
-                                grid[i][j+2][2] = 1
-                                grid[i][j+1][2] = 0
-                            grid[i][j][1] = 0
-                            grid[i][j+1][1] = 1
+                        elif key == "Right" and Play_canvas.current_level[i][j+1][0] != 1 and not(Play_canvas.current_level[i][j+1][2]==1) and (Play_canvas.current_level[i][j+2][2]==1 or Play_canvas.current_level[i][j+2][0]==1):
+                            if Play_canvas.current_level[i][j+1][2]==1:
+                                Play_canvas.current_level[i][j+2][2] = 1
+                                Play_canvas.current_level[i][j+1][2] = 0
+                            Play_canvas.current_level[i][j][1] = 0
+                            Play_canvas.current_level[i][j+1][1] = 1
 
-                        if key == "Down" and grid[i+1][j][0] != 1 and not(grid[i+1][j][2]==1) and (grid[i+2][j][2]==1 or grid[i+2][j][0]==1):
-                            if grid[i+1][j][2] == 1:
-                                grid[i+2][j][2] = 1
-                                grid[i+1][j][2] = 0
-                            grid[i][j][1] = 0
-                            grid[i+1][j][1] = 1
+                        if key == "Down" and Play_canvas.current_level[i+1][j][0] != 1 and not(Play_canvas.current_level[i+1][j][2]==1) and (Play_canvas.current_level[i+2][j][2]==1 or Play_canvas.current_level[i+2][j][0]==1):
+                            if Play_canvas.current_level[i+1][j][2] == 1:
+                                Play_canvas.current_level[i+2][j][2] = 1
+                                Play_canvas.current_level[i+1][j][2] = 0
+                            Play_canvas.current_level[i][j][1] = 0
+                            Play_canvas.current_level[i+1][j][1] = 1
                         mvt_poss = False # pour ne pas se déplacer de plusieurs cases à la fois
             
             #le cas échéant on change de niveau 
-            if (test_victoire()==True):
+            if (Play_canvas.test_victoire()==True):
                 level_number = level_number+1
 
                 if level_number==1:
-                    genere_level2()
+                    Play_canvas.load_level()
 
                 if level_number==2:
                     genere_level3()
                     Canevas.create_text(400,300, fill="darkblue", font="Times 60 italic bold", text="BRAVO !!!")
                     end = True #on bloque les commandes
             #on raffiche le canevas
-            print_canvas_grid
+            print_canvas_Play_canvas.current_level
 
 
-    Canevas.focus_set()
-    Canevas.bind("<Key>", Keyboard)
-    Canevas.grid(row=0,column=0)
+    Interface_canvas.focus_set()
+    Interface_canvas.bind("<Key>", Keyboard)
+    Interface_canvas.Play_canvas.current_level(row=0,column=0)
 
-    #Création d'un widget Button (bouton Quitter)
+    # Création d'un widget Button (bouton Quitter)
     ExitButton = Button(Window, text="Quitter", command=Window.destroy)
-    ExitButton.grid(row=1, column=0)
+    ExitButton.Play_canvas.current_level(row=1, column=0)
 
     #boucle principale
     Window.mainloop()

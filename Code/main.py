@@ -36,9 +36,10 @@ class SokobanGame(Canvas):
         return level 
 
     def load_level(self, level:np.array, level_num=None):
+        self.delete("all")
         if level_num==None:
             self.current_level = level
-            self.print_on_canvas(level)
+            self.update(self.current_level)
         else:
             path="system/base_levels/"
             match level_num:
@@ -64,7 +65,7 @@ class SokobanGame(Canvas):
                     file_name = 'level10.txt'
             level = self.create_level(path+file_name)
             self.current_level = level
-            self.update()
+            self.update(self.current_level)
     
     def update(self, level):
 
@@ -101,7 +102,7 @@ class SokobanGame(Canvas):
     def test_victory(self):
         for i in range(self.current_level.shape[0]):
             for j in range(self.current_level.shape[1]):
-                if self.current_level[i][j][3] == 1 and self.current_level[i][j][2] == 0:
+                if self.current_level[i][j] == "I":
                     return False
                     #si il y au moins un interrupteur sans caisse, on n'a pas fini
         return True
@@ -141,62 +142,59 @@ if __name__ == "__main__":
             Play_canvas.delete("all")
             mvt_poss = True
             key = event.keysym
-            for i in range(12):
-                for j in range(16):
-                    if Play_canvas.current_level[i][j][1] == 1 and mvt_poss:
+            for i in range(Play_canvas.current_level.shape[0]):
+                for j in range(Play_canvas.current_level.shape[1]):
+                    if Play_canvas.current_level[i][j] == "p" and mvt_poss:
                         #déplacement possible si pas de mur dans la case destination ni de caisse suivie d'une caisse ou d'un mur
                         #haut
-                        if key == "Up" and Play_canvas.current_level[i-1][j][0] != 1 and not(Play_canvas.current_level[i-1][j][2]==1) and (Play_canvas.current_level[i-2][j][2]==1 or Play_canvas.current_level[i-2][j][0]==1):
-                            if Play_canvas.current_level[i-1][j][2] == 1:
-                                Play_canvas.current_level[i-2][j][2] = 1
-                                Play_canvas.current_level[i-1][j][2] = 0
-                            Play_canvas.current_level[i][j][1] = 0
-                            Play_canvas.current_level[i-1][j][1] = 1
+                        if key == "Up" and (Play_canvas.current_level[i-1][j] == "0" or (Play_canvas.current_level[i-1][j] == "X" and Play_canvas.current_level[i-2][j] == "0")):
+                            if Play_canvas.current_level[i-1][j] == "X":
+                                Play_canvas.current_level[i-2][j] = "X"
+                            Play_canvas.current_level[i-1][j] = "p"
+                            Play_canvas.current_level[i][j] = "0"
                 
-                        elif key == "Left" and Play_canvas.current_level[i][j-1][0] != 1 and not(Play_canvas.current_level[i][j-1][2]==1) and (Play_canvas.current_level[i][j-2][2]==1 or Play_canvas.current_level[i][j-2][0]==1):
-                            if Play_canvas.current_level[i][j-1][2]==1:
-                                Play_canvas.current_level[i][j-2][2] = 1
-                                Play_canvas.current_level[i][j-1][2] = 0
-                            Play_canvas.current_level[i][j][1] = 0
-                            Play_canvas.current_level[i][j-1][1] = 1
+                        elif key == "Left" and (Play_canvas.current_level[i][j-1] == "0" or (Play_canvas.current_level[i][j-1] =="X" and Play_canvas.current_level[i][j-2] == "0")):
+                            if Play_canvas.current_level[i][j-1] == "X":
+                                Play_canvas.current_level[i][j-2] = "X"
+                            Play_canvas.current_level[i][j-1] = "p"
+                            Play_canvas.current_level[i][j] = "0"
 
-                        elif key == "Right" and Play_canvas.current_level[i][j+1][0] != 1 and not(Play_canvas.current_level[i][j+1][2]==1) and (Play_canvas.current_level[i][j+2][2]==1 or Play_canvas.current_level[i][j+2][0]==1):
-                            if Play_canvas.current_level[i][j+1][2]==1:
-                                Play_canvas.current_level[i][j+2][2] = 1
-                                Play_canvas.current_level[i][j+1][2] = 0
-                            Play_canvas.current_level[i][j][1] = 0
-                            Play_canvas.current_level[i][j+1][1] = 1
+                        elif key == "Right" and (Play_canvas.current_level[i][j+1] == "0" or (Play_canvas.current_level[i][j+1] =="X" and Play_canvas.current_level[i][j+2] == "0")):
+                            if Play_canvas.current_level[i][j+1] == "X":
+                                Play_canvas.current_level[i][j+2] = "X"
+                            Play_canvas.current_level[i][j+1] = "p"
+                            Play_canvas.current_level[i][j] = "0"
 
-                        if key == "Down" and Play_canvas.current_level[i+1][j][0] != 1 and not(Play_canvas.current_level[i+1][j][2]==1) and (Play_canvas.current_level[i+2][j][2]==1 or Play_canvas.current_level[i+2][j][0]==1):
-                            if Play_canvas.current_level[i+1][j][2] == 1:
-                                Play_canvas.current_level[i+2][j][2] = 1
-                                Play_canvas.current_level[i+1][j][2] = 0
-                            Play_canvas.current_level[i][j][1] = 0
-                            Play_canvas.current_level[i+1][j][1] = 1
+                        if key == "Down" and (Play_canvas.current_level[i+1][j] == "0" or (Play_canvas.current_level[i+1][j] =="X" and Play_canvas.current_level[i+2][j] == "0")):
+                            if Play_canvas.current_level[i+1][j] == "X":
+                                Play_canvas.current_level[i+2][j] = "X"
+                            Play_canvas.current_level[i+1][j] = "p"
+                            Play_canvas.current_level[i][j] = "0"
+            
                         mvt_poss = False # pour ne pas se déplacer de plusieurs cases à la fois
             
             #le cas échéant on change de niveau 
-            if (Play_canvas.test_victoire()==True):
+            if (Play_canvas.test_victory()):
                 level_number = level_number+1
 
                 if level_number==1:
-                    Play_canvas.load_level()
+                    Play_canvas.load_level(2)
 
                 if level_number==2:
-                    genere_level3()
-                    Canevas.create_text(400,300, fill="darkblue", font="Times 60 italic bold", text="BRAVO !!!")
+                    Play_canvas.load_level(3)
+                    Play_canvas.create_text(400,300, fill="darkblue", font="Times 60 italic bold", text="BRAVO !!!")
                     end = True #on bloque les commandes
-            #on raffiche le canevas
-            print_canvas_Play_canvas.current_level
+            #on update le canevas
+            Play_canvas.update
 
 
     Interface_canvas.focus_set()
     Interface_canvas.bind("<Key>", Keyboard)
-    Interface_canvas.Play_canvas.current_level(row=0,column=0)
+    Interface_canvas.grid(row=0,column=0)
 
     # Création d'un widget Button (bouton Quitter)
     ExitButton = Button(Window, text="Quitter", command=Window.destroy)
-    ExitButton.Play_canvas.current_level(row=1, column=0)
+    ExitButton.grid(row=1, column=0)
 
     #boucle principale
     Window.mainloop()

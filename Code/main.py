@@ -186,13 +186,13 @@ class SokobanGame(Canvas):
     def modify_events(self, event):
         print("IN MODIFY EVENTS : " + str(event.num))
         match event:
-            case "<Button-1>":
+            case "Button-1":
                 print("Right click pressed !!")
                 pass
-            case "<Button-2>":
+            case "Button-2":
                 print("Left click pressed !!")
                 pass
-            case "<Motion>":
+            case "Motion":
                 print("Mouse moved !!")
                 pass
 

@@ -1,5 +1,7 @@
 from tkinter import *
 import numpy as np
+from os import listdir
+from os.path import isfile, join
 
 
 class GameWindow(Tk):
@@ -8,11 +10,17 @@ class GameWindow(Tk):
 
         self.title("Jeu du Sokoban - Félix - Trophées de la NSI")
 
-        self.window_dimentions()
+        self.set_window_dimentions()
+
+        
+        self.Interface_canvas = Canvas(self, width = self.width, height=self.height, bg="grey")
+        
+        self.Game = SokobanGame(self, width = self.width*0.6, height=self.height*0.5, bg="white")
+        
         self.load_page(0)
         
     
-    def window_dimentions(self):
+    def set_window_dimentions(self):
         self.width = 1200
         self.height = 800
 
@@ -24,9 +32,78 @@ class GameWindow(Tk):
 
         self.geometry("%dx%d+%d+%d"%(self.width,self.height, center_width, center_height))
 
-    def load_page(self, page):
+        
 
-        pass
+
+
+    
+    def load_page(self, page_to, side=None): 
+        self.Interface_canvas.delete('all')
+        self.Interface_canvas.grid(row=0,column=0)
+        match page_to:
+                case "IndexPage" | 0:
+                    print("IndexPage")
+
+                    #Titres
+                    self.Interface_canvas.create_text(self.width/2, 100, fill="darkblue", font="Times 60 italic bold", text="Jeu du SOKOBAN")
+                    self.Interface_canvas.create_text(self.width/2, 250, fill="darkblue", font="Times 20 italic bold", text="Poussez les caisses sur les interrupteurs")
+                                      
+
+                    # Bouton pour accéder à la page de choix du niveau à jouer
+                    PlayButton = Button(self, text="Jouer", command=lambda: self.load_page(2))
+                    self.Interface_canvas.create_window(int(self.Interface_canvas["width"])/2+50, int(self.Interface_canvas["height"])/2, window=PlayButton)
+
+
+                    # Bouton pour accéder à la page de création de niveaux
+                    AddLevelButton = Button(self, text="Créer des niveaux", command=lambda: self.load_page(1))
+                    self.Interface_canvas.create_window(int(self.Interface_canvas["width"])/2-50, int(self.Interface_canvas["height"])/2, window=AddLevelButton)
+
+                    # Bouton pour accéder aux crédits
+                    CreditButton = Button(self, text="Consulter les crédits", command=lambda: self.load_page(-1))
+                    self.Interface_canvas.create_window(int(self.Interface_canvas["width"])-100, 50, window=CreditButton)
+
+
+
+                    pass
+                case "ChooseLevelPage" | 2:
+                    print("ChooseLevelPage")
+                    self.Interface_canvas.create_text(self.width/2, 100, fill="darkblue", font="Times 60 italic bold", text="Choissisez le niveau")
+
+                    
+                    LevelsButtonsPositionsList = []
+
+                    lign_num = round(int(self.Interface_canvas["height"])/200)
+                    buttons_num = round(int(self.Interface_canvas["width"])/200)
+                    #Pour chaque ligne de boutons
+                    for i in range(1,round(int(self.Interface_canvas["height"])/200)):
+                        #Pour chaque bouton dans cette ligne
+                        for j in range(1,round(int(self.Interface_canvas["width"])/200)):
+                            LevelsButtonsPositionsList.append( (round(int(self.Interface_canvas["width"])/buttons_num)*j,  round(int(self.Interface_canvas["height"])/lign_num)*i) )
+                            
+
+                    #On crée un bouton pour chaque niveau
+                    for k in range(len(self.Game.get_available_levels(mode="base_levels"))):
+                        for file in self.Game.get_available_levels():
+                            print(file)
+                        
+                        LevelButtoni = Button(self, width=4, height=4,text=str(k+1), command=lambda: self.load_page(3))
+                        self.Interface_canvas.create_window(LevelsButtonsPositionsList[k][0], LevelsButtonsPositionsList[k][1], window=LevelButtoni)
+                        
+                    
+                    pass
+                case "PlayPage" | 3:
+                    print("PlayPage")
+                    self.Game.launch()
+                    pass
+                case "AddLevelPage" | 1:
+                    print("AddLevelPage")
+                    self.Interface_canvas.create_text(self.width/2, 100, fill="darkblue", font="Times 60 italic bold", text="Ajoutez un niveau")
+                    pass
+                case "CreditsPage" | -1:
+                    print("CreditsPage")
+                    self.Interface_canvas.create_text(self.width/2, 100, fill="darkblue", font="Times 60 italic bold", text="Crédits")
+                    pass
+        
 
 
 
@@ -40,7 +117,42 @@ class SokobanGame(Canvas):
         self.height = height
         self.current_level = np.array([[]])
         self.level_number = 1
-        
+    
+
+    
+    # Fonction en lançant le jeu
+    def launch(self, modify=False):
+        #on grid le canvas
+        self.grid(row=0, column=0)
+        print("Level is launching...")
+
+        if not(modify):
+            #On active les commandes
+            self.focus_set()
+            self.bind("<Key>", self.move)
+
+            self.load_level(1)
+        else:
+            print("IN LAUNCH")
+            #On lance le processus de gestion des évenements
+            self.bind("<Button-1>", self.add_level_page_events)
+            self.bind("<Button-2>", self.add_level_page_events)
+            self.bind("<Motion>", self.add_level_page_events)
+            pass
+
+
+    def get_available_levels(self, mode="all"):
+        base_levels = [f for f in listdir("system/base_levels") if isfile(join("system/base_levels/", f))]
+        custom_levels = [f for f in listdir("system/custom_levels") if isfile(join("system/custom_levels/", f))]
+        base_levels.sort()
+        custom_levels.sort()
+        if mode == "all":
+            return base_levels+custom_levels
+        elif mode == "base_levels":
+            return base_levels
+        elif mode == "custom_levels":
+            return custom_levels
+
 
     def create_level(self, level_path):
 
@@ -57,6 +169,7 @@ class SokobanGame(Canvas):
         
         level = np.array(level_in_list)
         return level
+    
 
     
     def update(self):
@@ -66,7 +179,7 @@ class SokobanGame(Canvas):
         grid_size = self.height/self.current_level.shape[0]
 
         # On on recalcule la largeur du canvas en fonction de la largeur du niveau
-        self.width = self.current_level.shape[1]
+        self.config(width=self.current_level.shape[1]*grid_size)
 
         # On crée les lignes de chaque ligne et de chaque colonne
         # /!\ current_level.shape[0] = num of colums ; current_level.shape[1] = num of ligns
@@ -96,11 +209,10 @@ class SokobanGame(Canvas):
                 elif (self.current_level[i][j] == "I"):
                     #affichage interrupteur
                     self.create_oval(grid_size*j+10, grid_size*i+grid_size/5, grid_size*j+grid_size*4/5, grid_size*i+grid_size*4/5, fill="red")
-        self.grid(row=0,column=0)
+        
 
     
     def load_level(self, level_num:int=None, level:np.array=None):
-        self.delete("all")
         if level_num==None:
             self.current_level = level
         else:
@@ -129,6 +241,8 @@ class SokobanGame(Canvas):
             self.current_level = self.create_level(path+file_name)
 
         self.update()
+        self.grid(row=0,column=0)
+
     
 
     def move(self, event):
@@ -174,19 +288,14 @@ class SokobanGame(Canvas):
             if (self.test_victory()):
 
                 self.level_number = self.level_number + 1
+                
+                if self.level_number!=len(self.get_available_levels()):
+                    self.load_level(self.level_number)
 
-                if self.level_number==2:
-                    self.load_level(3)
-
-                if self.level_number==3:
-                    self.load_level(3)
-                    self.create_text(400,300, fill="darkblue", font="Times 60 italic bold", text="BRAVO !!!")
-                    self.grid_remove()
-    
             #on update le canevas
             self.update()
 
-    def modify_events(self, event):
+    def add_level_page_events(self, event):
         print("IN MODIFY EVENTS : " + str(event.num))
         match event:
             case "Button-1":
@@ -199,24 +308,6 @@ class SokobanGame(Canvas):
                 print("Mouse moved !!")
                 pass
 
-    # Fonction en lançant le jeu
-    def launch(self, modify=False):
-        # On enlève le bouton jouer
-        LaunchButton.grid_remove()
-        #on grid le canvas
-        self.grid(row=0, column=0)
-
-        if not(modify):
-            #On active les commandes
-            self.focus_set()
-            self.bind("<Key>", self.move)
-        else:
-            print("IN LAUNCH")
-            #On lance le processus de modification
-            self.bind("<Button-1>", self.modify_events)
-            self.bind("<Button-2>", self.modify_events)
-            self.bind("<Motion>", self.modify_events)
-            pass
 
         #On charge le premier niveau
         self.load_level(1)
@@ -241,40 +332,6 @@ if __name__ == "__main__":
     #Variables globales
     level_number = 0
     end = False
-
-
-    
-
-    # Création d'un widget Canvas (zone graphique)
-    Interface_canvas = Canvas(Window, width = Window.width, height=Window.height, bg="grey")
-    Play_canvas = SokobanGame(Window, width = Window.width*0.6, height=Window.height*0.5, bg="white")
-
-    # Titre
-    Interface_canvas.create_text(Window.width/2, 100, fill="darkblue", font="Times 60 italic bold", text="Jeu du SOKOBAN")
-    Interface_canvas.create_text(Window.width/2, 250, fill="darkblue", font="Times 20 italic bold", text="Poussez les caisses sur les interrupteurs")
-    Interface_canvas.create_text(Window.width/2, 300, fill="darkblue", font="Times 20 italic bold", text="Appuyez sur une touche pour commencer")
-
-    Interface_canvas.grid(row=0,column=0)
-
-    # Création d'un bouton jouer (in levels)
-    LaunchButton = Button(Window, text="Lancer le jeu", command=Play_canvas.launch)
-    LaunchButton.grid(row=1, column=0)
-    
-
-    # Création d'un bouton créer des niveaux
-    ModifyButton = Button(Window, text="Créer des niveaux", command=Play_canvas.launch(modify=False))
-    ModifyButton.grid(row=0, column=0)
-
-    # Création d'un bouton jouer
-    PlayButton = Button(Window, text="Jouer", command=Play_canvas.launch(modify=False))
-    PlayButton.grid(row=0, column=0)
-
-
-    # Création d'un widget Button (bouton Quitter)
-    ExitButton = Button(Window, text="Quitter", command=Window.destroy)
-    ExitButton.grid(row=1, column=0)
-
-    
 
 
     #boucle principale

@@ -65,6 +65,9 @@ class SokobanGame(Canvas):
         # On calcule la taille de la grille voulue en fonction de la talle du niveau
         grid_size = self.height/self.current_level.shape[0]
 
+        # On on recalcule la largeur du canvas en fonction de la largeur du niveau
+        self.width = self.current_level.shape[1]
+
         # On crée les lignes de chaque ligne et de chaque colonne
         # /!\ current_level.shape[0] = num of colums ; current_level.shape[1] = num of ligns
         #ligns
@@ -244,7 +247,7 @@ if __name__ == "__main__":
 
     # Création d'un widget Canvas (zone graphique)
     Interface_canvas = Canvas(Window, width = Window.width, height=Window.height, bg="grey")
-    Play_canvas = SokobanGame(Window, width = Window.width*0.5, height=Window.height*0.5, bg="white")
+    Play_canvas = SokobanGame(Window, width = Window.width*0.6, height=Window.height*0.5, bg="white")
 
     # Titre
     Interface_canvas.create_text(Window.width/2, 100, fill="darkblue", font="Times 60 italic bold", text="Jeu du SOKOBAN")
@@ -259,11 +262,11 @@ if __name__ == "__main__":
     
 
     # Création d'un bouton créer des niveaux
-    ModifyButton = Button(Window, text="Créer des niveaux", command=Play_canvas.launch(modify=True))
+    ModifyButton = Button(Window, text="Créer des niveaux", command=Play_canvas.launch(modify=False))
     ModifyButton.grid(row=0, column=0)
 
     # Création d'un bouton jouer
-    PlayButton = Button(Window, text="Jouer", command=Play_canvas.launch(modify=True))
+    PlayButton = Button(Window, text="Jouer", command=Play_canvas.launch(modify=False))
     PlayButton.grid(row=0, column=0)
 
 

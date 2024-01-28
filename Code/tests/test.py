@@ -24,7 +24,10 @@ win = GameWindow()
 
 Play_canvas = Canvas(win, width = win.width*0.5, height=win.height*0.5, bg="white")
 Play_canvas.grid(row=0,column=0)
-Play_canvas.geometry("25x52")
-Play_canvas.create_rectangle(50*j, 50*i, 50*j+50, 50*i+50, fill="blue")
+
+#Titres
+Play_canvas.create_text(300, 100, fill="darkblue", font="Times 60 italic bold", text="Jeu du SOKOBAN")
+Play_canvas.create_text(500, 250, fill="darkblue", font="Times 20 italic bold", text="Poussez les caisses sur les interrupteurs")
+Play_canvas.delete("all")           
 
 win.mainloop()

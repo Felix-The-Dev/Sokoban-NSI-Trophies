@@ -39,10 +39,9 @@ class GameWindow(Tk):
         self.geometry("%dx%d+%d+%d"%(self.width,self.height, center_width, center_height))
 
     def update_interface_size(self, event):
-        if time.time() * 1000 > self.time+100:
+        if time.time() * 1000 > self.time+2000:
             self.load_page(self.actual_page)
-            
-            self.time = time.time() * 10000
+            self.time = time.time() * 1000
 
         
 
@@ -303,7 +302,7 @@ class SokobanGame(Canvas):
                     self.Window.load_page(3, self.level_number)
                 else:
                     print("Game Finished")
-                    self.Window.destroy()
+                    self.Window.load_page(2)
 
             #on update le canevas
             self.update()

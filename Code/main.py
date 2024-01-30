@@ -1,4 +1,5 @@
 from tkinter import *
+from threading import *
 import numpy as np
 import time
 from os import listdir
@@ -46,31 +47,31 @@ class InterfaceCanvas(Canvas):
         self.WidgetsList = dict([])
 
 
-        self.load_page(self.actual_page)
-        
-
     def update_interface_size(self, event):
         if time.time() * 1000 > self.time+100:
-            self.reload()
+            self.load_page(self.actual_page)
             self.time = time.time() * 1000
 
 
     def reload(self):
-        for widget in self.WidgetsList:
+        for name,widget in self.WidgetsList.items():
             widget_width = 0
             widget_height = 0
-            print(widget)
-            if type(widget[1]["width"]) == int:
-                widget_width = widget[1]["width"]
+            if type(widget["width"]) == int:
+                widget_width = widget["width"]
             else:
-                widget_width = eval(widget[1]["width"])
+                widget_width = eval(widget["width"])
 
-            if type(widget[1]["height"]) == int:
-                widget_height = widget[1]["height"]
+            if type(widget["height"]) == int:
+                widget_height = widget["height"]
             else:
-                widget_height = eval(widget[1]["height"])
+                widget_height = eval(widget["height"])
 
-            self.create_window(widget_width, widget_height, window=widget[0])
+            self.create_window(widget_width, widget_height, window=widget["widget"])
+
+        # print("La page contient:")
+        # for widget in self.Window.winfo_children():
+        #     widget.destroy()
         
         self["width"] = self.Window.winfo_width()
         self["height"] = self.Window.winfo_height()
@@ -80,6 +81,7 @@ class InterfaceCanvas(Canvas):
 
         self.WidgetsList = dict([])
         self.delete('all')
+        
 
         match page_to:
             case "IndexPage" | 0:
@@ -93,19 +95,20 @@ class InterfaceCanvas(Canvas):
 
                 # Bouton pour accéder à la page de choix du niveau à jouer
                 PlayButton = Button(self.Window, text="Jouer", command=lambda: self.load_page(2))
-                self.WidgetsList["PlayButton"]=(PlayButton, {"width":'int(self["width"])/2+50', "height":'int(self["height"])/2'})
+                self.WidgetsList["PlayButton"]={"widget":PlayButton, "width":'int(self["width"])/2+50', "height":'int(self["height"])/2'}
 
 
                 # Bouton pour accéder à la page de création de niveaux
                 AddLevelButton = Button(self.Window, text="Créer des niveaux", command=lambda: self.load_page(1))
-                self.WidgetsList["AddLevelButton"]=(AddLevelButton, {"width":'int(self["width"])/2-50', "height":'int(self["height"])/2'})
+                self.WidgetsList["AddLevelButton"]={"widget":AddLevelButton, "width":'int(self["width"])/2-50', "height":'int(self["height"])/2'}
 
                 # Bouton pour accéder aux crédits
                 CreditButton = Button(self.Window, text="Consulter les crédits", command=lambda: self.load_page(-1))
-                self.WidgetsList["CreditButton"]=(CreditButton, {"width":'int(self["width"])-100', "height":50})
+                self.WidgetsList["CreditButton"]={"widget":CreditButton, "width":'int(self["width"])-100', "height":50}
 
 
             case "ChooseLevelPage" | 2:
+                print('ChooseLevelPage')
                 self.actual_page = 2
                 self.create_text(int(self["width"])/2, 100, fill="darkblue", font="Times 60 italic bold", text="Choissisez le niveau")
 
@@ -128,7 +131,7 @@ class InterfaceCanvas(Canvas):
                 if len(self.Game.get_available_levels(mode="base_levels")) <= len(LevelsButtonsPositionsList):
                     k=0
                     for button in Buttons_list:
-                        self.WidgetsList["LevelButton"+str(k)]=((button, {"width":LevelsButtonsPositionsList[k][0], "height":LevelsButtonsPositionsList[k][1]}))
+                        self.WidgetsList["LevelButton"+str(k)]={"widget":button, "width":LevelsButtonsPositionsList[k][0], "height":LevelsButtonsPositionsList[k][1]}
                         k+=1
                 
                 
@@ -324,6 +327,7 @@ class SokobanGame(Canvas):
                 else:
                     print("Game Finished")
                     self.Interface.load_page(2)
+                    self.grid_forget(row=0,column=0)
 
             #on update le canevas
             self.update()

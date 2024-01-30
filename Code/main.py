@@ -49,7 +49,7 @@ class InterfaceCanvas(Canvas):
 
     def update_interface_size(self, event):
         if time.time() * 1000 > self.time+100:
-            self.load_page(self.actual_page)
+            self.load_page(self.actual_page, launch_level=self.Game.level_number)
             self.time = time.time() * 1000
 
 
@@ -68,10 +68,15 @@ class InterfaceCanvas(Canvas):
                 widget_height = eval(widget["height"])
 
             self.create_window(widget_width, widget_height, window=widget["widget"])
+            print("packed widget with height : "+str(widget_height)+" and with width : "+str(widget_width))
 
-        # print("La page contient:")
+        print("\n\nLe canvas interface contient : ")
+        for widget in self.WidgetsList:
+            print("\t"+widget)
+        
+        # print("\n La fenêtre contient : ")
         # for widget in self.Window.winfo_children():
-        #     widget.destroy()
+        #     print(widget)
         
         self["width"] = self.Window.winfo_width()
         self["height"] = self.Window.winfo_height()
@@ -319,15 +324,16 @@ class SokobanGame(Canvas):
             #le cas échéant on change de niveau 
             if (self.test_victory()):
                 self.level_number = self.level_number + 1
-
+                
                 
 
                 if self.level_number<=len(self.get_available_levels(mode="base_levels")):
+                    self.load_level(self.level_number)
                     self.Interface.load_page(3, self.level_number)
                 else:
                     print("Game Finished")
                     self.Interface.load_page(2)
-                    self.grid_forget(row=0,column=0)
+                    self.grid_forget()
 
             #on update le canevas
             self.update()

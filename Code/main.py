@@ -17,8 +17,8 @@ class GameWindow(Tk):
         
         self.Interface_canvas = InterfaceCanvas(self, width = self.width, height=self.height, bg="grey")
 
-        self.bind('<Motion>', self.Interface_canvas.update_interface_size)
         self.bind('<Configure>', self.Interface_canvas.update_interface_size)
+        self.bind('<Motion>', lambda onlyreload=True:self.Interface_canvas.update_interface_size(onlyreload=onlyreload))
 
         
     def set_window_dimentions(self):
@@ -32,33 +32,44 @@ class GameWindow(Tk):
         center_height = screen_height/2-self.height/2 - 20
 
         self.geometry("%dx%d+%d+%d"%(self.width,self.height, center_width, center_height))
+        self.minsize(700,600)
 
         
+
+#######################################################################################################
+
 
 class InterfaceCanvas(Canvas):
     def __init__(self, Window, width = 600, height=400, bg="grey"):
         Canvas.__init__(self, Window, width=width, height=height, bg=bg)
         
         self.Window = Window
+        self.bg = bg
         
         self.Game = SokobanGame(self.Window, Interface=self, width = int(self["width"])*0.6, height=int(self["height"])*0.5, bg="white")
 
         self.actual_page = 0
         self.time = 0
+        self.time2 = 0
         self.WidgetsList = dict([])
         self.load_page(self.actual_page)
 
 
-    def update_interface_size(self, event):
-        if time.time() * 1000 > self.time+100:
+    def update_interface_size(self, event=None, onlyreload=False, now=False):
+        # On rafraichie visuellement la page toutes les 0.2s
+        if time.time() * 1000 > self.time+200 or now:
             self.load_page(self.actual_page, reload=True, launch_level=self.Game.level_number)
             self.time = time.time() * 1000
 
+        
+        # On reload completement la page pour que le design reste responsive toutes les 2s
+        if time.time() * 1000 > self.time2+2000 and not(onlyreload):
+            print("big_reload")
+            self.load_page(self.actual_page, launch_level=self.Game.level_number)
+            self.time2 = time.time() * 1000
+
 
     def reload(self):
-        for widget in self.Window.winfo_children():
-            if not(isinstance(widget,InterfaceCanvas) or isinstance(widget,SokobanGame)):
-                print(widget)
 
         for name,widget in self.WidgetsList.items():
             widget_width = 0
@@ -73,20 +84,22 @@ class InterfaceCanvas(Canvas):
             else:
                 widget_height = eval(widget["height"])
 
-            self.create_window(widget_width, widget_height, window=widget["widget"])
+            if widget["page"] == self.actual_page:
+                self.create_window(widget_width, widget_height, window=widget["widget"])
 
         
+        self["width"] = self.Window.winfo_width()
+        self["height"] = self.Window.winfo_height()
         
         
         self.grid(row=0,column=0)
         
 
-    def load_page(self, page_to, reload=False, launch_level=False):
+    def load_page(self, page_to, reload=False, launch_level=None):
 
         self["width"] = self.Window.winfo_width()
         self["height"] = self.Window.winfo_height()
         
-        self.WidgetsList = dict([])
         self.delete('all')
         
 
@@ -101,18 +114,19 @@ class InterfaceCanvas(Canvas):
                 self.create_text(int(self["width"])/2, 250, fill="darkblue", font="Times 20 italic bold", text="Poussez les caisses sur les interrupteurs")
                                     
 
-                # Bouton pour accéder à la page de choix du niveau à jouer
-                PlayButton = Button(self.Window, text="Jouer", command=lambda: self.load_page(2))
-                self.WidgetsList["PlayButton"]={"widget":PlayButton, "width":'int(self["width"])/2+50', "height":'int(self["height"])/2'}
+                if not(reload):
+                    # Bouton pour accéder à la page de choix du niveau à jouer
+                    PlayButton = Button(self.Window, text="Jouer", command=lambda: self.load_page(2))
+                    self.WidgetsList["PlayButton"]={"widget":PlayButton, "page":0, "width":'int(self["width"])/2+50', "height":'int(self["height"])/2'}
 
 
-                # Bouton pour accéder à la page de création de niveaux
-                AddLevelButton = Button(self.Window, text="Créer des niveaux", command=lambda: self.load_page(1))
-                self.WidgetsList["AddLevelButton"]={"widget":AddLevelButton, "width":'int(self["width"])/2-50', "height":'int(self["height"])/2'}
+                    # Bouton pour accéder à la page de création de niveaux
+                    AddLevelButton = Button(self.Window, text="Créer des niveaux", command=lambda: self.load_page(1))
+                    self.WidgetsList["AddLevelButton"]={"widget":AddLevelButton, "page":0, "width":'int(self["width"])/2-50', "height":'int(self["height"])/2'}
 
-                # Bouton pour accéder aux crédits
-                CreditButton = Button(self.Window, text="Consulter les crédits", command=lambda: self.load_page(-1))
-                self.WidgetsList["CreditButton"]={"widget":CreditButton, "width":'int(self["width"])-100', "height":50}
+                    # Bouton pour accéder aux crédits
+                    CreditButton = Button(self.Window, text="Consulter les crédits", command=lambda: self.load_page(-1))
+                    self.WidgetsList["CreditButton"]={"widget":CreditButton, "page":0, "width":'int(self["width"])-100', "height":50}
 
 
             case "ChooseLevelPage" | 2:
@@ -121,28 +135,54 @@ class InterfaceCanvas(Canvas):
                 self.actual_page = 2
                 self.create_text(int(self["width"])/2, 100, fill="darkblue", font="Times 60 italic bold", text="Choissisez le niveau")
 
-                
-                LevelsButtonsPositionsList = []
+                if not(reload):
 
-                lign_num = round(int(self["height"])/200)
-                buttons_num = round(int(self["width"])/200)
-                #Pour chaque ligne de boutons
-                for i in range(1,round(int(self["height"])/200)):
-                    #Pour chaque bouton dans cette ligne
-                    for j in range(1,round(int(self["width"])/200)):
-                        LevelsButtonsPositionsList.append( ('round(int(self["width"])/'+str(buttons_num)+')*'+str(j),  'round(int(self["height"])/'+str(lign_num)+')*'+str(i)) )
-                
-                #On crée un bouton pour chaque niveau
-                Buttons_list = []
-                for k in range(len(self.Game.get_available_levels(mode="base_levels"))):
-                    Buttons_list.append(Button(self.Window, width=4, height=4, text=str(k+1), command=lambda k=k: self.load_page(3, launch_level=k+1)))
-                
-                if len(self.Game.get_available_levels(mode="base_levels")) <= len(LevelsButtonsPositionsList):
-                    k=0
-                    for button in Buttons_list:
-                        self.WidgetsList["LevelButton"+str(k)]={"widget":button, "width":LevelsButtonsPositionsList[k][0], "height":LevelsButtonsPositionsList[k][1]}
-                        k+=1
-                
+                    # les < et > pour montrer les niveaux suivants/précédents
+                    SeePreviousImage = assets["SeePreviousImage"]
+                    SeePrevious= Button(self.Window, bg=self.bg ,image=SeePreviousImage, command=None)
+                    self.WidgetsList["SeePreviousButton"]={"widget":SeePrevious, "page":2, "width":100, "height":'round(int(self["height"])/2)'}
+
+                    SeeNextImage = assets["SeeNextImage"] 
+                    SeeNext= Button(self.Window, bg=self.bg, image=SeeNextImage, command=None)
+                    self.WidgetsList["SeeNextButton"]={"widget":SeeNext, "page":2, "width":'round(int(self["width"])-100)', "height":'round(int(self["height"])/2)'}
+
+
+                    # Les boutons de chaque niveau
+                    LevelsButtonsPositionsList = []
+
+                    lign_num = round(int(self["height"])/200)
+                    buttons_num = round(int(self["width"])/200)
+                    #Pour chaque ligne de boutons
+                    for i in range(1,round(int(self["height"])/200)):
+                        #Pour chaque bouton dans cette ligne
+                        for j in range(1,round(int(self["width"])/200)):
+                            LevelsButtonsPositionsList.append( ('round(int(self["width"])/'+str(buttons_num)+')*'+str(j),  'round(int(self["height"])/'+str(lign_num)+')*'+str(i)) )
+                    
+                    #On crée un bouton pour chaque niveau
+                    Buttons_list = []
+                    for k in range(len(self.Game.get_available_levels(mode="base_levels"))):
+                        Buttons_list.append(Button(self.Window, width=4, height=4, bg='#BFCEFF', text=str(k+1), command=lambda k=k: self.load_page(3, launch_level=k+1)))
+                    
+                    # Si il n'y a qu'une seule ligne
+                    if len(self.Game.get_available_levels(mode="base_levels")) <= len(LevelsButtonsPositionsList):
+                        k=0
+                        for button in Buttons_list:
+                            self.WidgetsList["LevelButton"+str(k)]={"widget":button, "page":2, "width":LevelsButtonsPositionsList[k][0], "height":LevelsButtonsPositionsList[k][1]}
+                            k+=1
+                    else:
+                        print("Too many buttons("+str(len(Buttons_list))+") to print them all ("+str(len(LevelsButtonsPositionsList))+" positions)")
+                        # for widget_key in self.WidgetsList:
+                        #     if "LevelButton" in widget_key:
+                        #         del self.WidgetsList[widget_key]
+
+                        # k=0
+                        # for button in Buttons_list:
+                        #     if k+1<len(LevelsButtonsPositionsList):
+                        #         self.WidgetsList["LevelButton"+str(k)]={"widget":button, "page":2, "width":LevelsButtonsPositionsList[k][0], "height":LevelsButtonsPositionsList[k][1]}
+                        #     k+=1
+                    # else:
+                    #     
+                    
                 
                 
             case "PlayPage" | 3:
@@ -151,10 +191,11 @@ class InterfaceCanvas(Canvas):
                 self.actual_page = 3
 
                 
-                self.create_text(int(self["width"])/2, 80, fill="darkblue", font="Times 60 italic bold", text="Niveau "+str(launch_level))
+                self.create_text(int(self["width"])/2, 80, fill="darkblue", font="Times 60 italic bold", text="Niveau "+str(self.Game.level_number))
+                
                 if not(reload):
                     self.Game.launch()
-                    self.Game.load_level(launch_level)
+                    self.Game.load_level(self.Game.level_number)
 
 
             case "AddLevelPage" | 1:
@@ -172,6 +213,12 @@ class InterfaceCanvas(Canvas):
                 pass
 
         self.reload()
+
+        
+
+
+#######################################################################################################
+        
 
 
 class SokobanGame(Canvas):
@@ -326,7 +373,7 @@ class SokobanGame(Canvas):
                         mvt_poss = False # pour ne pas se déplacer de plusieurs cases à la fois
             
 
-            #le cas échéant on change de niveau 
+            #Si le niveau est terminé, on change de niveau 
             if (self.test_victory()):
                 self.level_number = self.level_number + 1
                 
@@ -376,6 +423,12 @@ if __name__ == "__main__":
     
     # Création de la fenetre principale
     Window = GameWindow()
+
+    
+    assets = {
+        "SeePreviousImage":PhotoImage(file = r"system/images/show_previous_levels.png"),
+        "SeeNextImage":PhotoImage(file = r"system/images/show_next_levels.png") 
+    }
 
     #boucle principale
     Window.mainloop()

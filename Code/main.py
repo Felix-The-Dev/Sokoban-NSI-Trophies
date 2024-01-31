@@ -17,6 +17,7 @@ class GameWindow(Tk):
         
         self.Interface_canvas = InterfaceCanvas(self, width = self.width, height=self.height, bg="grey")
 
+        self.bind('<Motion>', self.Interface_canvas.update_interface_size)
         self.bind('<Configure>', self.Interface_canvas.update_interface_size)
 
         
@@ -45,15 +46,20 @@ class InterfaceCanvas(Canvas):
         self.actual_page = 0
         self.time = 0
         self.WidgetsList = dict([])
+        self.load_page(self.actual_page)
 
 
     def update_interface_size(self, event):
         if time.time() * 1000 > self.time+100:
-            self.load_page(self.actual_page, launch_level=self.Game.level_number)
+            self.load_page(self.actual_page, reload=True, launch_level=self.Game.level_number)
             self.time = time.time() * 1000
 
 
     def reload(self):
+        for widget in self.Window.winfo_children():
+            if not(isinstance(widget,InterfaceCanvas) or isinstance(widget,SokobanGame)):
+                print(widget)
+
         for name,widget in self.WidgetsList.items():
             widget_width = 0
             widget_height = 0
@@ -68,29 +74,26 @@ class InterfaceCanvas(Canvas):
                 widget_height = eval(widget["height"])
 
             self.create_window(widget_width, widget_height, window=widget["widget"])
-            print("packed widget with height : "+str(widget_height)+" and with width : "+str(widget_width))
 
-        print("\n\nLe canvas interface contient : ")
-        for widget in self.WidgetsList:
-            print("\t"+widget)
         
-        # print("\n La fenêtre contient : ")
-        # for widget in self.Window.winfo_children():
-        #     print(widget)
         
+        
+        self.grid(row=0,column=0)
+        
+
+    def load_page(self, page_to, reload=False, launch_level=False):
+
         self["width"] = self.Window.winfo_width()
         self["height"] = self.Window.winfo_height()
-        self.grid(row=0,column=0)
-
-    def load_page(self, page_to, launch_level=False):
-
+        
         self.WidgetsList = dict([])
         self.delete('all')
         
 
         match page_to:
             case "IndexPage" | 0:
-                print("IndexPage")
+                if not(reload):
+                    print("IndexPage")
                 self.actual_page = 0
 
                 #Titres
@@ -113,7 +116,8 @@ class InterfaceCanvas(Canvas):
 
 
             case "ChooseLevelPage" | 2:
-                print('ChooseLevelPage')
+                if not(reload):
+                    print('ChooseLevelPage')
                 self.actual_page = 2
                 self.create_text(int(self["width"])/2, 100, fill="darkblue", font="Times 60 italic bold", text="Choissisez le niveau")
 
@@ -142,27 +146,27 @@ class InterfaceCanvas(Canvas):
                 
                 
             case "PlayPage" | 3:
-                print("PlayPage")
+                if not(reload):
+                    print("PlayPage")
                 self.actual_page = 3
 
-
-                if launch_level == False:
-                    self.create_text(int(self["width"])/2, 80, fill="darkblue", font="Times 60 italic bold", text="Niveau "+str(launch_level))
-                    self.Game.launch()
-                else:
-                    self.create_text(int(self["width"])/2, 80, fill="darkblue", font="Times 60 italic bold", text="Niveau "+str(launch_level))
+                
+                self.create_text(int(self["width"])/2, 80, fill="darkblue", font="Times 60 italic bold", text="Niveau "+str(launch_level))
+                if not(reload):
                     self.Game.launch()
                     self.Game.load_level(launch_level)
 
 
             case "AddLevelPage" | 1:
-                print("AddLevelPage")
+                if not(reload):
+                    print("AddLevelPage")
                 self.actual_page = 1
                 self.create_text(int(self["width"])/2, 100, fill="darkblue", font="Times 60 italic bold", text="Ajoutez un niveau")
                 pass
         
             case "CreditsPage" | -1:
-                print("CreditsPage")
+                if not(reload):
+                    print("CreditsPage")
                 self.actual_page = -1
                 self.create_text(int(self["width"])/2, 100, fill="darkblue", font="Times 60 italic bold", text="Crédits")
                 pass
@@ -179,6 +183,7 @@ class SokobanGame(Canvas):
         self.width = width
         self.height = height
         self.current_level = np.array([[]])
+        self.end = False
         self.level_number = 1
     
 
@@ -285,7 +290,7 @@ class SokobanGame(Canvas):
     def move(self, event):
         self.grid(row=0,column=0)
         """ Gestion de l'évenement : Appui sur une touche du clavier"""
-        if end == False: #quand le jeu est terminé, on ne peut plus se déplacer
+        if self.end == False: #quand le jeu est terminé, on ne peut plus se déplacer
             #on efface le canevas
             mvt_poss = True
             key = event.keysym
@@ -371,11 +376,6 @@ if __name__ == "__main__":
     
     # Création de la fenetre principale
     Window = GameWindow()
-
-    #Variables globales
-    level_number = 0
-    end = False
-
 
     #boucle principale
     Window.mainloop()

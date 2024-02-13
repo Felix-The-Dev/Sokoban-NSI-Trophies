@@ -46,7 +46,7 @@ class InterfaceCanvas(Canvas):
         self.Window = Window
         self.bg = bg
         
-        self.Game = SokobanGame(self.Window, Interface=self, width = int(self["width"])*0.6, height=int(self["height"])*0.5, bg="white")
+        self.Game = SokobanGame(self.Window, Interface=self, width=int(self["width"])*0.6, height=int(self["height"])*0.5, bg="white")
 
         self.levels_buttons_page_num = 0
         self.last_buttons_config = []
@@ -108,7 +108,7 @@ class InterfaceCanvas(Canvas):
         self["height"] = self.Window.winfo_height()
 
         if not(reload):
-            self.time_before_big_reload += 2000
+            self.time_before_big_reload += 5000
         
         self.delete('all')
         
@@ -158,6 +158,13 @@ class InterfaceCanvas(Canvas):
                         for j in range(1,round(int(self["width"])/200)):
                             LevelsButtonsPositionsList.append( ('round(int(self["width"])/'+str(buttons_num)+')*'+str(j),  'round(int(self["height"])/'+str(lign_num)+')*'+str(i)) )
                     
+                    # Bouton retour
+                    ReturnButtonImage = assets["ReturnButtonImage"] 
+                    ReturnButton= Button(self.Window, bg=self.bg, image=ReturnButtonImage, command=lambda:self.buttons_actions("ReturnButton", args={"PreviousPage":0}))
+                    self.WidgetsList["ReturnButton"]={"widget":ReturnButton, "page":2, "width":50, "height":50}
+
+
+
                     # les < et > pour montrer les niveaux suivants/précédents
                     SeePreviousImage = assets["SeePreviousImage"]
                     SeePrevious= Button(self.Window, bg=self.bg ,image=SeePreviousImage, command=lambda:self.buttons_actions("SeePrevious"))
@@ -192,15 +199,28 @@ class InterfaceCanvas(Canvas):
                     else:
                         print("Too many buttons("+str(len(Buttons_list))+") to print them all ("+str(len(LevelsButtonsPositionsList))+" positions)")
                         
+
+                        pages_num = len(self.Game.get_available_levels(mode="base_levels")) // len(LevelsButtonsPositionsList)
+
                         # On clear les boutons qui vont peut être devoir disparaitre
                         keys_to_delete = []
                         for widget_key in self.WidgetsList:
                             if "LevelButton" in widget_key:
                                 keys_to_delete.append(widget_key)
+
+                        if self.levels_buttons_page_num == 0:
+                            for widget_key in self.WidgetsList:
+                                if "SeePreviousButton" in widget_key:
+                                    keys_to_delete.append(widget_key)
+                        if self.levels_buttons_page_num == pages_num:
+                            for widget_key in self.WidgetsList:
+                                if "SeeNextButton" in widget_key:
+                                    keys_to_delete.append(widget_key)
+
+                        
                         for key in keys_to_delete:
                             del self.WidgetsList[key]
-
-                        pages_num = len(self.Game.get_available_levels(mode="base_levels")) // len(LevelsButtonsPositionsList)
+                        
 
                         if self.levels_buttons_page_num == None:
                             self.levels_buttons_page_num = 0
@@ -210,15 +230,12 @@ class InterfaceCanvas(Canvas):
                             self.levels_buttons_page_num = pages_num
 
                         
-                        print("\n\n")
                         k=0
                         for button in Buttons_list:
                             if k>=len(LevelsButtonsPositionsList)*self.levels_buttons_page_num and k<len(LevelsButtonsPositionsList)*self.levels_buttons_page_num+len(LevelsButtonsPositionsList):
                                 pos_index=k-len(LevelsButtonsPositionsList)*self.levels_buttons_page_num
-                                print("Printed button "+str(k)+" with pos_index "+str(pos_index))
                                 self.WidgetsList["LevelButton"+str(k)]={"widget":button, "page":2, "width":LevelsButtonsPositionsList[pos_index][0], "height":LevelsButtonsPositionsList[pos_index][1]}
                             k+=1
-                        print("\n\n\n")
 
                     
 
@@ -229,12 +246,17 @@ class InterfaceCanvas(Canvas):
                     print("PlayPage")
                 self.actual_page = 3
 
-                
                 self.create_text(int(self["width"])/2, 80, fill="darkblue", font="Times 60 italic bold", text="Niveau "+str(self.Game.level_number))
                 
                 if not(reload):
-                    self.Game.launch()
+                    # Bouton retour
+                    ReturnButtonImage = assets["ReturnButtonImage"] 
+                    ReturnButton= Button(self.Window, bg=self.bg, image=ReturnButtonImage, command=lambda:self.buttons_actions("ReturnButton", args={"PreviousPage":2}))
+                    self.WidgetsList["ReturnButton"]={"widget":ReturnButton, "page":3, "width":50, "height":50}
+
                     self.Game.load_level(launch_level)
+                    self.Game.launch()
+
 
 
             case "AddLevelPage" | 1:
@@ -254,18 +276,23 @@ class InterfaceCanvas(Canvas):
         self.reload()
 
 
-    def buttons_actions(self, action):
+    def buttons_actions(self, action, args={}):
         """Fonction à passer en paramètre des boutons """
         match action:
+            case "ReturnButton":
+                print(args["PreviousPage"])
+                self.load_page(args["PreviousPage"])
+                self.Game.grid_forget()
+
             case "SeePrevious":
                 self.levels_buttons_page_num-=1
-                print("LevelsButtonsPage is now "+str(self.levels_buttons_page_num))
                 self.load_page(2)
                 
             case "SeeNext":
                 self.levels_buttons_page_num+=1
-                print("LevelsButtonsPage is now "+str(self.levels_buttons_page_num))
                 self.load_page(2)
+
+            
 
         
 
@@ -480,7 +507,8 @@ if __name__ == "__main__":
     
     assets = {
         "SeePreviousImage":PhotoImage(file = r"system/images/show_previous_levels.png"),
-        "SeeNextImage":PhotoImage(file = r"system/images/show_next_levels.png") 
+        "SeeNextImage":PhotoImage(file = r"system/images/show_next_levels.png"),
+        "ReturnButtonImage":PhotoImage(file = r"system/images/return.png"),
     }
 
     #boucle principale

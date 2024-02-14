@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 import time
+import math
 from os import listdir
 from os.path import isfile, join
 
@@ -37,30 +38,91 @@ def create_level(level_path):
     return level
 
 
-pygame.display.set_caption("Jeu du Sokoban - Félix.dev")
-screen = pygame.display.set_mode((1200,800))
+class Window():
+    def __init__(self):
+        pygame.display.set_caption("Jeu du Sokoban - Félix.dev")
+        self.size = (1200,800)
+        self.screen = pygame.display.set_mode(self.size, pygame.RESIZABLE)
 
-background = pygame.image.load('system/images/background.png')           # on crée l'arrière plan
-background = pygame.transform.scale(background, (1300, 800))
+        self.set_widgets()
+        self.actual_page = {}
 
-return_button = pygame.image.load('system/images/return.png')           # on crée le bouton retour
-return_button = pygame.transform.scale(return_button, (100, 100))
-return_button_rect = return_button.get_rect()                           # on crée son rect
-return_button_rect.x = 990
-return_button_rect.y = 10
+        self.load_page(0)
+        self.running = True
 
-play_button = pygame.image.load('system/images/return.png')                                     # on crée le bouton Jouer
-play_button = pygame.transform.scale(play_button, (100, 100))
-play_button_rect = play_button.get_rect()                               # on crée son rect
-play_button_rect.x = 990
-play_button_rect.y = 10
 
-running = True
-while running:
-    screen.blit(background, (0, 0))     # on affiche le boutton des paramètres
-    screen.blit(play_button, (0, 0))     # on affiche le boutton des paramètres
-    pygame.display.flip()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-            pygame.quit()
+    def set_widgets(self):
+        
+        self.background = pygame.image.load('system/assets/background.jpg')           # on crée l'arrière plan
+        self.background = pygame.transform.scale(self.background, (self.screen.get_width(), self.screen.get_height()))
+
+
+        self.return_button = pygame.image.load('system/assets/return.png')           # on crée le bouton retour
+        self.return_button = pygame.transform.scale(self.return_button, (75, 75))
+        self.return_button_rect = self.return_button.get_rect()                           # on crée son rect
+        self.return_button_rect.x = 10
+        self.return_button_rect.y = 10
+
+ 
+        self.play_button = pygame.Surface((10, 10))                                # on crée le bouton Jouer
+        pygame.draw.rect(self.play_button, (0,255,0), ((40,10),(50,30)), 3)
+        self.play_button.fill((255,0,0))                                                
+        self.play_button = pygame.transform.scale(self.play_button, (100, 100))
+        self.play_button_position = ("math.ceil(self.screen.get_width()/2)","math.ceil(self.screen.get_height()/2)")
+        self.play_button_rect = self.play_button.get_rect()                               # on crée son rect
+        self.play_button_rect.x = eval(self.play_button_position[0])
+        self.play_button_rect.y = eval(self.play_button_position[1])
+
+    def run(self,):
+        for keys,element in self.actual_page.items():
+            self.screen.blit(element["widget"], element["position"])   # on affiche tous les boutons de la page actuelle
+        pygame.display.flip()
+
+        
+        for event in pygame.event.get():
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                
+                #if the mouse is clicked on the
+                # button the game is terminated
+                if self.play_button_rect.collidepoint(event.pos):
+                    print("Bouton cliqué !")
+
+            elif event.type == pygame.VIDEORESIZE:
+                size= event.size
+
+            if event.type == pygame.QUIT:
+                self.running = False
+                pygame.quit()
+
+    def update_responsive_design(self):
+        for keys,element in self.actual_page.items():
+            element["position"].x = eval(self.play_button_position[0])
+            element["position"].y = eval(self.play_button_position[1])
+        
+    def load_page(self, page_to=0):
+        self.actual_page = {}
+        match page_to:
+            case "IndexPage" | 0:
+                self.actual_page = {
+                    "Background":{"widget":self.background, "position":(0,0)},
+                    "ReturnButton":{"widget":self.return_button, "position":self.return_button_rect},
+                    "PlayButton":{"widget":self.play_button, "position":self.play_button_rect},
+                }
+                pass
+            case "ChangeLevelPage" | 2:
+                pass
+            case "PlayPage" | 3:
+                pass
+            case "CreditPage" | -1:
+                pass
+            case "AddLevelPage" | 1:
+                pass
+
+
+
+if __name__ == '__main__':
+    app = Window()
+
+    while app.running:
+            app.run()

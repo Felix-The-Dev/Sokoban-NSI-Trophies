@@ -158,12 +158,6 @@ class InterfaceCanvas(Canvas):
                         for j in range(1,round(int(self["width"])/200)):
                             LevelsButtonsPositionsList.append( ('round(int(self["width"])/'+str(buttons_num)+')*'+str(j),  'round(int(self["height"])/'+str(lign_num)+')*'+str(i)) )
                     
-                    # Bouton retour
-                    ReturnButtonImage = assets["ReturnButtonImage"] 
-                    ReturnButton= Button(self.Window, bg=self.bg, image=ReturnButtonImage, command=lambda:self.buttons_actions("ReturnButton", args={"PreviousPage":0}))
-                    self.WidgetsList["ReturnButton"]={"widget":ReturnButton, "page":2, "width":50, "height":50}
-
-
 
                     # les < et > pour montrer les niveaux suivants/précédents
                     SeePreviousImage = assets["SeePreviousImage"]
@@ -249,11 +243,6 @@ class InterfaceCanvas(Canvas):
                 self.create_text(int(self["width"])/2, 80, fill="darkblue", font="Times 60 italic bold", text="Niveau "+str(self.Game.level_number))
                 
                 if not(reload):
-                    # Bouton retour
-                    ReturnButtonImage = assets["ReturnButtonImage"] 
-                    ReturnButton= Button(self.Window, bg=self.bg, image=ReturnButtonImage, command=lambda:self.buttons_actions("ReturnButton", args={"PreviousPage":2}))
-                    self.WidgetsList["ReturnButton"]={"widget":ReturnButton, "page":3, "width":50, "height":50}
-
                     self.Game.load_level(launch_level)
                     self.Game.launch()
 
